@@ -1,0 +1,71 @@
+
+hostname R1
+
+! DHCP exclusions
+ip dhcp excluded-address 192.168.10.1 192.168.10.10
+ip dhcp excluded-address 192.168.30.1 192.168.30.10
+ip dhcp excluded-address 192.168.40.1 192.168.40.10
+
+! DHCP pools
+ip dhcp pool HR
+ network 192.168.10.0 255.255.255.0
+ default-router 192.168.10.1
+ dns-server 192.168.20.100
+
+ip dhcp pool IT
+ network 192.168.30.0 255.255.255.0
+ default-router 192.168.30.1
+ dns-server 192.168.20.100
+
+ip dhcp pool sales
+ network 192.168.40.0 255.255.255.0
+ default-router 192.168.40.1
+ dns-server 192.168.20.100
+
+! VLAN 30 - IT
+interface GigabitEthernet0/0.30
+ encapsulation dot1Q 30
+ ip address 192.168.30.1 255.255.255.0
+ ip nat inside
+
+! VLAN 40 - Sales
+interface GigabitEthernet0/0.40
+ encapsulation dot1Q 40
+ ip address 192.168.40.1 255.255.255.0
+ ip nat inside
+
+! VLAN 10 - HR
+interface GigabitEthernet0/1.10
+ encapsulation dot1Q 10
+ ip address 192.168.10.1 255.255.255.0
+ ip nat inside
+ ip access-group HR-SECURITY in
+
+! VLAN 20 - Server network
+interface GigabitEthernet0/1.20
+ encapsulation dot1Q 20
+ ip address 192.168.20.1 255.255.255.0
+ ip nat inside
+
+! ISP-facing interface
+interface GigabitEthernet0/2
+ ip address 203.0.113.2 255.255.255.252
+ ip nat outside
+
+! NAT overload
+ip nat inside source list 10 interface GigabitEthernet0/2 overload
+
+! Default route to ISP
+ip route 0.0.0.0 0.0.0.0 203.0.113.1
+
+! NAT ACL
+access-list 10 permit 192.168.10.0 0.0.0.255
+access-list 10 permit 192.168.20.0 0.0.0.255
+access-list 10 permit 192.168.30.0 0.0.0.255
+access-list 10 permit 192.168.40.0 0.0.0.255
+
+! HR security ACL
+ip access-list extended HR-SECURITY
+ permit icmp 192.168.10.0 0.0.0.255 192.168.30.0 0.0.0.255 echo-reply
+ permit ip any any
+ deny ip 192.168.10.0 0.0.0.255 192.168.30.0 0.0.0.255
