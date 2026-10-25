@@ -1,0 +1,27 @@
+
+enable
+configure terminal
+
+hostname SW1
+spanning-tree mode pvst
+spanning-tree extend system-id
+
+! IT department - VLAN 30
+interface range FastEthernet0/1-3
+ switchport mode access
+ switchport access vlan 30
+ exit
+
+! Sales department - VLAN 40
+interface range FastEthernet0/4-6
+ switchport mode access
+ switchport access vlan 40
+ exit
+
+! Trunk link
+interface GigabitEthernet0/1
+ switchport mode trunk
+ exit
+
+end
+copy running-config startup-config
