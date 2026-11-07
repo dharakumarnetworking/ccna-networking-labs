@@ -1,0 +1,48 @@
+enable
+configure terminal
+
+hostname R1
+
+! DHCP configuration
+ip dhcp excluded-address 192.168.10.1 192.168.10.10
+
+ip dhcp pool HR
+ network 192.168.10.0 255.255.255.0
+ default-router 192.168.10.1
+ dns-server 192.168.20.100
+ exit
+
+! Router-to-router connection
+interface GigabitEthernet0/0
+ ip address 10.0.0.1 255.255.255.252
+ no shutdown
+ exit
+
+! Router-on-a-Stick physical interface
+interface GigabitEthernet0/1
+ no ip address
+ no shutdown
+ exit
+
+! VLAN 10 - HR
+interface GigabitEthernet0/1.10
+ encapsulation dot1Q 10
+ ip address 192.168.10.1 255.255.255.0
+ exit
+
+! VLAN 20
+interface GigabitEthernet0/1.20
+ encapsulation dot1Q 20
+ ip address 192.168.20.1 255.255.255.0
+ exit
+
+! OSPF configuration
+router ospf 1
+ router-id 1.1.1.1
+ network 10.0.0.0 0.0.0.3 area 0
+ network 192.168.10.0 0.0.0.255 area 0
+ network 192.168.20.0 0.0.0.255 area 0
+ exit
+
+end
+write memory
