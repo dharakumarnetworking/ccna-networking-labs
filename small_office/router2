@@ -1,0 +1,57 @@
+enable
+configure terminal
+
+hostname R2
+
+! DHCP excluded addresses
+ip dhcp excluded-address 192.168.30.1 192.168.30.10
+ip dhcp excluded-address 192.168.40.1 192.168.40.10
+
+! DHCP pool - Sales
+ip dhcp pool SALES
+ network 192.168.30.0 255.255.255.0
+ default-router 192.168.30.1
+ dns-server 192.168.20.100
+ exit
+
+! DHCP pool - IT
+ip dhcp pool IT
+ network 192.168.40.0 255.255.255.0
+ default-router 192.168.40.1
+ dns-server 192.168.20.100
+ exit
+
+! Point-to-point connection to R1
+interface GigabitEthernet0/0
+ ip address 10.0.0.2 255.255.255.252
+ no shutdown
+ exit
+
+! Trunk connection to switch
+interface GigabitEthernet0/1
+ no ip address
+ no shutdown
+ exit
+
+! VLAN 30 - Sales
+interface GigabitEthernet0/1.30
+ encapsulation dot1Q 30
+ ip address 192.168.30.1 255.255.255.0
+ exit
+
+! VLAN 40 - IT
+interface GigabitEthernet0/1.40
+ encapsulation dot1Q 40
+ ip address 192.168.40.1 255.255.255.0
+ exit
+
+! OSPF
+router ospf 1
+ router-id 2.2.2.2
+ network 10.0.0.0 0.0.0.3 area 0
+ network 192.168.30.0 0.0.0.255 area 0
+ network 192.168.40.0 0.0.0.255 area 0
+ exit
+
+end
+write memory
